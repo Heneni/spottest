@@ -20,6 +20,20 @@ const createBabelOptions = (isDev) => ({
   ],
 });
 
+const babelLoaderOptions = {
+  babelrc: false,
+  cacheDirectory: true,
+  presets: [
+    '@babel/preset-typescript',
+    ['@babel/preset-react', { runtime: 'automatic' }],
+  ],
+  plugins: [
+    '@babel/plugin-syntax-dynamic-import',
+    '@babel/plugin-proposal-class-properties',
+    '@babel/plugin-proposal-optional-chaining',
+  ],
+};
+
 /**
  * @param {object} [env]
  * @param {{mode?: 'development' | 'production'}} [argv]
@@ -70,6 +84,67 @@ function buildConfig(env = {}, argv = {}) {
                 implementation: sass,
                 sassOptions: { includePaths: ['src/'] },
               },
+const buildConfig = () => ({
+  entry: {
+    index: './src/index.tsx',
+    graph: './src/graphStandalone.tsx',
+    artistAverager: './src/artistAverager/index.tsx',
+    musicGalaxy: './src/musicGalaxy/index.tsx',
+  },
+  cache: false,
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: '/',
+    filename: '[name].[contenthash].js',
+    chunkFilename: '[name].[contenthash].js',
+    clean: true,
+  },
+  mode: isDev ? 'development' : 'production',
+  devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
+  experiments: { asyncWebAssembly: true },
+  module: {
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: /node_modules/,
+        use: [{ loader: 'babel-loader', options: babelLoaderOptions }],
+      },
+      { test: /\.hbs$/, use: 'handlebars-loader' },
+      { test: /\.css$/, use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }] },
+      { test: /\.(ttf|eot|woff2?|svg)$/, type: 'asset/resource', generator: { filename: '[name][ext]' } },
+      { test: /\.(png|svg|jpg|jpeg|gif)$/i, type: 'asset/resource' },
+        test: /\.(tsx?|js)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-typescript', { isTSX: true, allExtensions: true }],
+              ['@babel/preset-react', { runtime: 'automatic' }],
+            ],
+            plugins: [
+              '@babel/plugin-syntax-dynamic-import',
+              '@babel/plugin-proposal-class-properties',
+              '@babel/plugin-proposal-optional-chaining',
+            ],
+          },
+        },
+      },
+      { test: /\.hbs$/, use: 'handlebars-loader' },
+      { test: /\.css$/, use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }] },
+      { test: /\.(ttf|eot|woff2?|svg)$/i, type: 'asset/resource', generator: { filename: '[name][ext]' } },
+      { test: /\.(png|svg|jpe?g|gif)$/i, type: 'asset/resource' },
+      {
+        test: /\.scss$/,
+        use: [
+          'style-loader',
+          { loader: 'css-loader', options: { sourceMap: isDev } },
+          'resolve-url-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              implementation: sass,
+              sassOptions: { includePaths: ['src/'] },
             },
           ],
         },
