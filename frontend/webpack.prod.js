@@ -1,20 +1,22 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const config = require('./webpack.config');
+/* Production-specific Webpack configuration override */
 
-const siteUrlEnv = process.env.REACT_APP_SITE_URL || '';
-// Ensure trailing slash when an absolute URL is provided, otherwise use root '/'
-const publicPath = siteUrlEnv ? `${siteUrlEnv.replace(/\/$/, '')}/` : '/';
+const baseConfig = require('./webpack.config');
 
-module.exports = {
-  ...config,
-  output: { ...config.output, publicPath },
 const rawSiteUrl = (process.env.REACT_APP_SITE_URL || '').trim();
-// If REACT_APP_SITE_URL provided, ensure it ends with a trailing slash; otherwise use root '/'
-const normalizedSiteUrl = rawSiteUrl ? (rawSiteUrl.endsWith('/') ? rawSiteUrl : `${rawSiteUrl}/`) : '/';
+// Ensure trailing slash if a site URL was provided; otherwise use root '/'
+const publicPath = rawSiteUrl ? (rawSiteUrl.endsWith('/') ? rawSiteUrl : rawSiteUrl + '/') : '/';
 
 module.exports = {
-  ...config,
-  output: { ...config.output, publicPath: normalizedSiteUrl },
+  ...baseConfig,
   mode: 'production',
   devtool: 'source-map',
+  output: {
+    ...baseConfig.output,
+    publicPath,
+  },
+  optimization: {
+    ...baseConfig.optimization,
+    splitChunks: { chunks: 'all' },
+    runtimeChunk: 'single',
+  },
 };
