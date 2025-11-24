@@ -1,12 +1,12 @@
-/* Production-specific Webpack configuration override */
+'use strict';
 
 const baseConfigFactory = require('./webpack.config');
-const baseConfig = typeof baseConfigFactory === 'function' ? baseConfigFactory() : baseConfigFactory;
+const baseConfig = typeof baseConfigFactory === 'function' ? baseConfigFactory({}, { mode: 'production' }) : baseConfigFactory;
 
 const rawSiteUrl = (process.env.REACT_APP_SITE_URL || '').trim();
-// Ensure trailing slash if a site URL was provided; otherwise use root '/'
-const publicPath = rawSiteUrl ? (rawSiteUrl.endsWith('/') ? rawSiteUrl : rawSiteUrl + '/') : '/';
+const publicPath = rawSiteUrl ? (rawSiteUrl.endsWith('/') ? rawSiteUrl : `${rawSiteUrl}/`) : '/';
 
+/** @type {import('webpack').Configuration} */
 module.exports = {
   ...baseConfig,
   mode: 'production',
