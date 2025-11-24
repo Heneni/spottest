@@ -30,13 +30,30 @@ const buildConfig = () => ({
   experiments: { asyncWebAssembly: true },
   module: {
     rules: [
-      { test: /\\.(tsx?|js)$/, exclude: /node_modules/, loader: 'babel-loader' },
-      { test: /.hbs$/, use: 'handlebars-loader' },
-      { test: /.css$/, use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }] },
-      { test: /\\.(ttf|eot|woff2?|svg)$/, type: 'asset/resource', generator: { filename: '[name][ext]' } },
-      { test: /\\.(png|svg|jpg|jpeg|gif)$/i, type: 'asset/resource' },
       {
-        test: /.scss$/,
+        test: /\.(tsx?|js)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-typescript', { isTSX: true, allExtensions: true }],
+              ['@babel/preset-react', { runtime: 'automatic' }],
+            ],
+            plugins: [
+              '@babel/plugin-syntax-dynamic-import',
+              '@babel/plugin-proposal-class-properties',
+              '@babel/plugin-proposal-optional-chaining',
+            ],
+          },
+        },
+      },
+      { test: /\.hbs$/, use: 'handlebars-loader' },
+      { test: /\.css$/, use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }] },
+      { test: /\.(ttf|eot|woff2?|svg)$/i, type: 'asset/resource', generator: { filename: '[name][ext]' } },
+      { test: /\.(png|svg|jpe?g|gif)$/i, type: 'asset/resource' },
+      {
+        test: /\.scss$/,
         use: [
           'style-loader',
           { loader: 'css-loader', options: { sourceMap: isDev } },
