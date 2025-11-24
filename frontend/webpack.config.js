@@ -8,6 +8,20 @@ const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin');
 
 const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 
+const babelLoaderOptions = {
+  babelrc: false,
+  cacheDirectory: true,
+  presets: [
+    '@babel/preset-typescript',
+    ['@babel/preset-react', { runtime: 'automatic' }],
+  ],
+  plugins: [
+    '@babel/plugin-syntax-dynamic-import',
+    '@babel/plugin-proposal-class-properties',
+    '@babel/plugin-proposal-optional-chaining',
+  ],
+};
+
 /**
  * @returns {import('webpack').Configuration}
  */
@@ -18,6 +32,7 @@ const buildConfig = () => ({
     artistAverager: './src/artistAverager/index.tsx',
     musicGalaxy: './src/musicGalaxy/index.tsx',
   },
+  cache: false,
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
@@ -31,6 +46,14 @@ const buildConfig = () => ({
   module: {
     rules: [
       {
+        test: /\.[jt]sx?$/,
+        exclude: /node_modules/,
+        use: [{ loader: 'babel-loader', options: babelLoaderOptions }],
+      },
+      { test: /\.hbs$/, use: 'handlebars-loader' },
+      { test: /\.css$/, use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }] },
+      { test: /\.(ttf|eot|woff2?|svg)$/, type: 'asset/resource', generator: { filename: '[name][ext]' } },
+      { test: /\.(png|svg|jpg|jpeg|gif)$/i, type: 'asset/resource' },
         test: /\.(tsx?|js)$/,
         exclude: /node_modules/,
         use: {
