@@ -1,4 +1,4 @@
-/* Base Webpack configuration (cleaned, legacy Sass function removed, defaults added) */
+/* Base Webpack configuration (cleaned, legacy Sass function removed, defaults added, simplified env injection) */
 
 const path = require('path');
 const webpack = require('webpack');
@@ -27,35 +27,16 @@ const buildConfig = () => ({
   },
   mode: isDev ? 'development' : 'production',
   devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
-  experiments: {
-    asyncWebAssembly: true,
-  },
+  experiments: { asyncWebAssembly: true },
   module: {
     rules: [
+      { test: /\\.(tsx?|js)$/, exclude: /node_modules/, loader: 'babel-loader' },
+      { test: /.hbs$/, use: 'handlebars-loader' },
+      { test: /.css$/, use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }] },
+      { test: /\\.(ttf|eot|woff2?|svg)$/, type: 'asset/resource', generator: { filename: '[name][ext]' } },
+      { test: /\\.(png|svg|jpg|jpeg|gif)$/i, type: 'asset/resource' },
       {
-        test: /\.(tsx?|js)$/, 
-        exclude: /node_modules/, 
-        loader: 'babel-loader',
-      },
-      {
-        test: /.hbs$/, 
-        use: 'handlebars-loader',
-      },
-      {
-        test: /.css$/, 
-        use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }],
-      },
-      {
-        test: /\.(ttf|eot|woff2?|svg)$/, 
-        type: 'asset/resource',
-        generator: { filename: '[name][ext]' },
-      },
-      {
-        test: /\.(png|svg|jpg|jpeg|gif)$/i,
-        type: 'asset/resource',
-      },
-      {
-        test: /.scss$/, 
+        test: /.scss$/,
         use: [
           'style-loader',
           { loader: 'css-loader', options: { sourceMap: isDev } },
@@ -64,9 +45,7 @@ const buildConfig = () => ({
             loader: 'sass-loader',
             options: {
               implementation: sass,
-              sassOptions: {
-                includePaths: ['src/'],
-              },
+              sassOptions: { includePaths: ['src/'] },
             },
           },
         ],
@@ -75,50 +54,20 @@ const buildConfig = () => ({
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.jsx', '.wasm'],
-    modules: [path.resolve('./node_modules'), path.resolve('.')],
+    modules: [path.resolve('./node_modules'), path.resolve('.'),
+    ],
     fallback: { path: false, fs: false },
   },
   optimization: isDev ? {} : { splitChunks: { chunks: 'all' }, runtimeChunk: 'single' },
   plugins: [
-    new HtmlWebpackPlugin({
-      alwaysWriteToDisk: true,
-      title: 'Spotifytrack - Personal Spotify Stats + History',
-      minify: !isDev,
-      template: 'index.hbs',
-      filename: 'index.html',
-      inject: true,
-      chunks: ['index'],
-    }),
-    new HtmlWebpackPlugin({
-      alwaysWriteToDisk: true,
-      title: 'Spotify Artist Relationship Graph',
-      minify: !isDev,
-      template: 'graph-standalone.hbs',
-      filename: 'graph.html',
-      inject: true,
-      chunks: ['graph'],
-    }),
-    new HtmlWebpackPlugin({
-      alwaysWriteToDisk: true,
-      title: 'Artist Averager',
-      minify: !isDev,
-      template: 'artist-averager.hbs',
-      filename: 'artist-averager.html',
-      inject: true,
-      chunks: ['artistAverager'],
-    }),
-    new HtmlWebpackPlugin({
-      alwaysWriteToDisk: true,
-      title: 'Music Galaxy',
-      minify: !isDev,
-      template: 'music-galaxy.hbs',
-      filename: 'music-galaxy.html',
-      inject: true,
-      chunks: ['musicGalaxy'],
-    }),
-    new webpack.EnvironmentPlugin({
-      REACT_APP_API_BASE_URL: process.env.REACT_APP_API_BASE_URL || '',
-      REACT_APP_SITE_URL: process.env.REACT_APP_SITE_URL || '',
+    new HtmlWebpackPlugin({ alwaysWriteToDisk: true, title: 'Spotifytrack - Personal Spotify Stats + History', minify: !isDev, template: 'index.hbs', filename: 'index.html', inject: true, chunks: ['index'] }),
+    new HtmlWebpackPlugin({ alwaysWriteToDisk: true, title: 'Spotify Artist Relationship Graph', minify: !isDev, template: 'graph-standalone.hbs', filename: 'graph.html', inject: true, chunks: ['graph'] }),
+    new HtmlWebpackPlugin({ alwaysWriteToDisk: true, title: 'Artist Averager', minify: !isDev, template: 'artist-averager.hbs', filename: 'artist-averager.html', inject: true, chunks: ['artistAverager'] }),
+    new HtmlWebpackPlugin({ alwaysWriteToDisk: true, title: 'Music Galaxy', minify: !isDev, template: 'music-galaxy.hbs', filename: 'music-galaxy.html', inject: true, chunks: ['musicGalaxy'] }),
+    // Replace EnvironmentPlugin with DefinePlugin to eliminate undefined variable errors decisively.
+    new webpack.DefinePlugin({
+      'process.env.REACT_APP_API_BASE_URL': JSON.stringify(process.env.REACT_APP_API_BASE_URL || ''),
+      'process.env.REACT_APP_SITE_URL': JSON.stringify(process.env.REACT_APP_SITE_URL || ''),
     }),
     new RetryChunkLoadPlugin({
       cacheBust: `function() { return Date.now(); }`,
@@ -127,11 +76,7 @@ const buildConfig = () => ({
       lastResortScript: 'window.location.reload()',
     }),
   ],
-  devServer: {
-    historyApiFallback: true,
-    port: 9050,
-    allowedHosts: 'all',
-  },
+  devServer: { historyApiFallback: true, port: 9050, allowedHosts: 'all' },
 });
 
 module.exports = buildConfig();
