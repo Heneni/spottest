@@ -1,19 +1,17 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const path = require('path');
+/* Base Webpack configuration (cleaned) */
 
+const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const sass = require('node-sass');
-const sassUtils = require('node-sass-utils')(sass);
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const sass = require('sass');
 const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin');
 
-const styles = require('./src/_style');
+const styles = require('./src/_style'); // If not needed for Sass functions, can remove later.
 
 const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 
 /**
- * @returns {webpack.Configuration}
+ * @returns {import('webpack').Configuration}
  */
 const buildConfig = () => ({
   entry: {
@@ -26,63 +24,52 @@ const buildConfig = () => ({
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
     filename: '[name].[contenthash].js',
-    chunkFilename: `${isDev ? '[name]' : '[name].[fullhash]'}.js`,
+    chunkFilename: '[name].[contenthash].js',
+    clean: true,
   },
-  resolve: {
-    fallback: { path: false, fs: false },
-  },
-  optimization: {},
-  mode: 'development',
-  devtool: 'eval-cheap-module-source-map',
+  mode: isDev ? 'development' : 'production',
+  devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
   experiments: {
     asyncWebAssembly: true,
   },
   module: {
     rules: [
       {
-        test: /\.(tsx?)|(js)$/,
-        exclude: /node_modules/,
+        test: /\.(tsx?|js)$/, 
+        exclude: /node_modules/, 
         loader: 'babel-loader',
       },
       {
-        test: /\.hbs$/,
+        test: /\.hbs$/, 
         use: 'handlebars-loader',
       },
       {
-        test: /\.css$/,
+        test: /\.css$/, 
         use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }],
       },
       {
-        test: /\.(ttf|eot|woff|woff2|svg)$/,
-        use: {
-          loader: 'file-loader',
-          options: {
-            name: '[name].[ext]',
-          },
-        },
+        test: /\.(ttf|eot|woff2?|svg)$/, 
+        type: 'asset/resource',
+        generator: { filename: '[name][ext]' },
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
       },
       {
-        test: /\.scss$/,
+        test: /\.scss$/, 
         use: [
-          {
-            loader: 'style-loader',
-          },
-          {
-            loader: 'css-loader',
-          },
-          {
-            loader: 'resolve-url-loader',
-          },
+          'style-loader',
+          { loader: 'css-loader', options: { sourceMap: isDev } },
+          'resolve-url-loader',
           {
             loader: 'sass-loader',
             options: {
+              implementation: sass,
               sassOptions: {
+                // Minimal stub for legacy function. Replace with real mapping if needed.
                 functions: {
-                  'jsStyles()': () => sassUtils.castToSass(styles),
+                  'jsStyles()': () => sass.types.Null.NULL,
                 },
                 includePaths: ['src/'],
               },
@@ -93,14 +80,16 @@ const buildConfig = () => ({
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.tsx', '.js', '.jsx', '.wasm'],
+    extensions: ['.tsx', '.ts', '.js', '.jsx', '.wasm'],
     modules: [path.resolve('./node_modules'), path.resolve('.')],
+    fallback: { path: false, fs: false },
   },
+  optimization: isDev ? {} : { splitChunks: { chunks: 'all' }, runtimeChunk: 'single' },
   plugins: [
     new HtmlWebpackPlugin({
       alwaysWriteToDisk: true,
       title: 'Spotifytrack - Personal Spotify Stats + History',
-      minify: true,
+      minify: !isDev,
       template: 'index.hbs',
       filename: 'index.html',
       inject: true,
@@ -109,7 +98,7 @@ const buildConfig = () => ({
     new HtmlWebpackPlugin({
       alwaysWriteToDisk: true,
       title: 'Spotify Artist Relationship Graph',
-      minify: true,
+      minify: !isDev,
       template: 'graph-standalone.hbs',
       filename: 'graph.html',
       inject: true,
@@ -118,7 +107,7 @@ const buildConfig = () => ({
     new HtmlWebpackPlugin({
       alwaysWriteToDisk: true,
       title: 'Artist Averager',
-      minify: true,
+      minify: !isDev,
       template: 'artist-averager.hbs',
       filename: 'artist-averager.html',
       inject: true,
@@ -127,29 +116,17 @@ const buildConfig = () => ({
     new HtmlWebpackPlugin({
       alwaysWriteToDisk: true,
       title: 'Music Galaxy',
-      minify: true,
+      minify: !isDev,
       template: 'music-galaxy.hbs',
       filename: 'music-galaxy.html',
       inject: true,
       chunks: ['musicGalaxy'],
     }),
     new webpack.EnvironmentPlugin(['REACT_APP_API_BASE_URL', 'REACT_APP_SITE_URL']),
-    // new BundleAnalyzerPlugin(),
     new RetryChunkLoadPlugin({
-      // optional stringified function to get the cache busting query string appended to the script src
-      // if not set will default to appending the string `?cache-bust=true`
-      cacheBust: `function() {
-        return Date.now();
-      }`,
-      // optional value to set the amount of time in milliseconds before trying to load the chunk again. Default is 0
+      cacheBust: `function() { return Date.now(); }`,
       retryDelay: 300,
-      // optional value to set the maximum number of retries to load the chunk. Default is 1
       maxRetries: 5,
-      // optional list of chunks to which retry script should be injected
-      // if not set will add retry script to all chunks that have webpack script loading
-      // chunks: ['chunkName'],
-      // optional code to be executed in the browser context if after all retries chunk is not loaded.
-      // if not set - nothing will happen and error will be returned to the chunk loader.
       lastResortScript: 'window.location.reload()',
     }),
   ],
