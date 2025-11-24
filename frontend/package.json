@@ -1,6 +1,9 @@
 {
   "name": "spotifytrack",
   "version": "0.1.0",
+  "engines": {
+    "node": "18.x"
+  },
   "description": "A personal homepage showing users' top songs and artists, providing a shareable link that they can use to show it off to friends.",
   "main": "src/index.tsx",
   "repository": "https://github.com/Ameobea/spotifytrack",
