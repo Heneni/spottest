@@ -1,6 +1,7 @@
 /* Production-specific Webpack configuration override */
 
-const baseConfig = require('./webpack.config');
+const baseConfigFactory = require('./webpack.config');
+const baseConfig = typeof baseConfigFactory === 'function' ? baseConfigFactory() : baseConfigFactory;
 
 const rawSiteUrl = (process.env.REACT_APP_SITE_URL || '').trim();
 // Ensure trailing slash if a site URL was provided; otherwise use root '/'
