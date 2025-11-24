@@ -1,12 +1,10 @@
-/* Base Webpack configuration (cleaned) */
+/* Base Webpack configuration (cleaned, legacy Sass function removed, defaults added) */
 
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const sass = require('sass');
 const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin');
-
-const styles = require('./src/_style'); // If not needed for Sass functions, can remove later.
 
 const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 
@@ -40,11 +38,11 @@ const buildConfig = () => ({
         loader: 'babel-loader',
       },
       {
-        test: /\.hbs$/, 
+        test: /.hbs$/, 
         use: 'handlebars-loader',
       },
       {
-        test: /\.css$/, 
+        test: /.css$/, 
         use: ['style-loader', { loader: 'css-loader', options: { sourceMap: false } }],
       },
       {
@@ -57,7 +55,7 @@ const buildConfig = () => ({
         type: 'asset/resource',
       },
       {
-        test: /\.scss$/, 
+        test: /.scss$/, 
         use: [
           'style-loader',
           { loader: 'css-loader', options: { sourceMap: isDev } },
@@ -67,10 +65,6 @@ const buildConfig = () => ({
             options: {
               implementation: sass,
               sassOptions: {
-                // Minimal stub for legacy function. Replace with real mapping if needed.
-                functions: {
-                  'jsStyles()': () => sass.types.Null.NULL,
-                },
                 includePaths: ['src/'],
               },
             },
@@ -122,7 +116,10 @@ const buildConfig = () => ({
       inject: true,
       chunks: ['musicGalaxy'],
     }),
-    new webpack.EnvironmentPlugin(['REACT_APP_API_BASE_URL', 'REACT_APP_SITE_URL']),
+    new webpack.EnvironmentPlugin({
+      REACT_APP_API_BASE_URL: process.env.REACT_APP_API_BASE_URL || '',
+      REACT_APP_SITE_URL: process.env.REACT_APP_SITE_URL || '',
+    }),
     new RetryChunkLoadPlugin({
       cacheBust: `function() { return Date.now(); }`,
       retryDelay: 300,
