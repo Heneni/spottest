@@ -1,4 +1,39 @@
-$js-styles: jsStyles();
-$colors: map-get($js-styles, 'colors');
-$chart-colors: map-get($js-styles, 'chart-colors');
-$monochrome-chart-colors: map-get($js-styles, 'monochrome-chart-colors');
+// Direct Sass definitions replacing previous jsStyles() runtime function.
+// Provides maps and lists for colors and chart colors.
+
+$colors: (
+  pink: #fd44d5,
+  green: #27b14c,
+  purple: #944bb1,
+  limeGreen: #bcd42a,
+  orange: #ff5d38,
+);
+
+$chart-colors: (
+  #bcd42a,
+  #fd44d5,
+  #ff5d38,
+  #27b14c,
+  #944bb1,
+  #26a6a6,
+  #b5dce7,
+  #ae6cc9,
+  #27b14c,
+);
+
+$monochrome-chart-colors: (
+  #71ff33,
+  #3ecc00,
+  #1f6600,
+);
+
+$category-chart-colors: (
+  #003f5c,
+  #2f4b7c,
+  #665191,
+  #a05195,
+  #d45087,
+  #f95d6a,
+  #ff7c43,
+  #ffa600,
+);
